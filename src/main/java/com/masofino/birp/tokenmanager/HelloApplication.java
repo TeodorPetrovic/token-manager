@@ -5,6 +5,7 @@ import com.masofino.birp.tokenmanager.configs.encryption.TokenManager;
 import com.masofino.birp.tokenmanager.configs.properties.AppConfig;
 import com.masofino.birp.tokenmanager.controllers.MainController;
 import com.masofino.birp.tokenmanager.entities.Token;
+import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpsConfigurator;
 import com.sun.net.httpserver.HttpsServer;
 import javafx.application.Application;
@@ -26,6 +27,7 @@ import javax.net.ssl.SSLContext;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.KeyStore;
 import java.security.PrivateKey;
@@ -108,40 +110,48 @@ public class HelloApplication extends Application {
 
     private void startHttpsServer() {
         try {
-            com.sun.net.httpserver.HttpHandler handler = ex -> {
-                String query = ex.getRequestURI().getQuery();
-                String name;
-                if (query != null && query.startsWith("token=")) {
-                    name = query.substring(6);
-                } else {
-                    name = null;
-                }
-                Token token = this.tokenManager.getTokens().stream()
-                        .filter(t -> t.getName().equals(name))
-                        .findFirst()
-                        .orElse(null);
-                if (token == null) {
-                    ex.sendResponseHeaders(404, -1);
-                } else {
-                    byte[] data = java.nio.file.Files.readAllBytes(token.getPublicKeyPath());
-                    ex.sendResponseHeaders(200, data.length);
-                    ex.getResponseBody().write(data);
-                }
-                ex.close();
-            };
-
             HttpsServer https = HttpsServer.create(new InetSocketAddress(8443), 0);
             Path certPath = Path.of(appConfig.getProperty("certificate.path"));
             Path privPath = Path.of(appConfig.getProperty("private.path"));
             SSLContext sslContext = createSSLContext(certPath, privPath);
 
             https.setHttpsConfigurator(new HttpsConfigurator(sslContext));
-            https.createContext("/api/public-key", handler);
+            https.createContext("/api/public-key", this::handlePublicKey);
             https.setExecutor(null);
             https.start();
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void handlePublicKey(HttpExchange ex) throws IOException {
+        if (!"GET".equalsIgnoreCase(ex.getRequestMethod())) {
+            ex.sendResponseHeaders(405, -1);
+            ex.close();
+            return;
+        }
+
+        String query = ex.getRequestURI().getQuery();
+        String name;
+        if (query != null && query.startsWith("token=")) {
+            name = query.substring(6);
+        } else {
+            name = null;
+        }
+
+        Token token = this.tokenManager.getTokens().stream()
+                .filter(t -> t.getName().equals(name))
+                .findFirst()
+                .orElse(null);
+
+        if (token == null) {
+            ex.sendResponseHeaders(404, -1);
+        } else {
+            byte[] data = Files.readAllBytes(token.getPublicKeyPath());
+            ex.sendResponseHeaders(200, data.length);
+            ex.getResponseBody().write(data);
+        }
+        ex.close();
     }
 
     private SSLContext createSSLContext(Path certPath, Path keyPath) throws Exception {

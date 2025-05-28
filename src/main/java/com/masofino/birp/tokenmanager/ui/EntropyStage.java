@@ -22,7 +22,7 @@ public class EntropyStage extends Stage {
         root.setTop(label);
         root.setCenter(bar);
 
-        Scene scene = new Scene(root, 300, 100);
+        Scene scene = new Scene(root, 600, 500);
         scene.setOnMouseMoved(e -> {
             data.write((int) e.getX());
             data.write((int) e.getY());

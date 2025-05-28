@@ -51,7 +51,7 @@ public class AppConfig {
     }
 
     public void setWorkspacePath(String path) {
-        properties.getProperty("workspace.path", path);
+        properties.setProperty("workspace.path", path);
     }
 
     public void setProperty(String key, String value) {

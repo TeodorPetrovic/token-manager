@@ -11,12 +11,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.*;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 
 public class TokenManager {
     private Path baseDir;
-    private List<Token> tokens;
+    private List<Token> tokens = new ArrayList<>();
 
     public TokenManager(Path baseDir) throws IOException {
        this.baseDir = baseDir;
