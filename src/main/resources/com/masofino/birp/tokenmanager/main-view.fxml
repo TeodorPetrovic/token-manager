@@ -11,7 +11,10 @@
                 <Tab text="Main">
                     <VBox alignment="TOP_LEFT" spacing="10" styleClass="tab">
                         <ListView fx:id="tokenList" prefHeight="400.0" prefWidth="598.0" VBox.vgrow="ALWAYS" />
-                        <Button onAction="#onAddToken" text="Add Token" />
+                        <HBox spacing="10">
+                            <Button onAction="#onAddToken" text="Add Token" />
+                            <Button onAction="#onChangeDirectory" text="Set Directory" />
+                        </HBox>
                     </VBox>
                 </Tab>
                 <Tab text="About">

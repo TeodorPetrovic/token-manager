@@ -11,10 +11,20 @@ module com.masofino.birp.tokenmanager {
     requires java.desktop;
     requires jdk.httpserver;
     requires com.dustinredmond.fxtrayicon;
+    requires java.prefs;
+    requires org.bouncycastle.provider;
+    requires org.bouncycastle.pkix;
 
     opens com.masofino.birp.tokenmanager to javafx.fxml;
     exports com.masofino.birp.tokenmanager;
 
     opens com.masofino.birp.tokenmanager.controllers to javafx.fxml;
     exports com.masofino.birp.tokenmanager.controllers;
+
+    opens com.masofino.birp.tokenmanager.configs.encryption to javafx.fxml;
+    exports com.masofino.birp.tokenmanager.configs.encryption;
+
+    opens com.masofino.birp.tokenmanager.entities to javafx.fxml;
+    exports com.masofino.birp.tokenmanager.entities;
+
 }
