@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.masofino.birp.tokenmanager.controllers.MainController" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
+    <top>
+        <TabPane fx:id="tabPane" tabClosingPolicy="UNAVAILABLE">
+            <tabs>
+                <Tab text="Main">
+                    <VBox alignment="TOP_LEFT" spacing="10" styleClass="tab">
+                        <ListView fx:id="tokenList" prefHeight="400.0" prefWidth="598.0" VBox.vgrow="ALWAYS" />
+                        <Button onAction="#onAddToken" text="Add Token" />
+                    </VBox>
+                </Tab>
+                <Tab text="About">
+                    <VBox alignment="CENTER">
+                        <Label styleClass="about-label" text="Token Manager\nVersion 1.0" />
+                    </VBox>
+                </Tab>
+            </tabs>
+        </TabPane>
+    </top>
+</BorderPane>
