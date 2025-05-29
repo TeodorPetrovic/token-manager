@@ -3,8 +3,10 @@ package com.masofino.birp.tokenmanager;
 import com.dustinredmond.fxtrayicon.FXTrayIcon;
 import com.masofino.birp.tokenmanager.configs.encryption.TokenManager;
 import com.masofino.birp.tokenmanager.configs.properties.AppConfig;
+import com.masofino.birp.tokenmanager.configs.properties.CorsFilter;
 import com.masofino.birp.tokenmanager.controllers.MainController;
 import com.masofino.birp.tokenmanager.entities.Token;
+import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpsConfigurator;
 import com.sun.net.httpserver.HttpsServer;
@@ -28,12 +30,14 @@ import javax.net.ssl.SSLContext;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.Security;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
+import java.util.stream.Collectors;
 
 public class MainApp extends Application {
 
@@ -109,14 +113,55 @@ public class MainApp extends Application {
             Path certPath = Path.of(appConfig.getProperty("certificate.path"));
             Path privPath = Path.of(appConfig.getProperty("private.path"));
             SSLContext sslContext = createSSLContext(certPath, privPath);
-
             https.setHttpsConfigurator(new HttpsConfigurator(sslContext));
-            https.createContext("/api/public-key", this::handlePublicKey);
+
+            // 3) create each context explicitly
+            HttpContext statusContext    = https.createContext("/api/status",    this::handleStatus);
+            HttpContext tokensContext    = https.createContext("/api/tokens",    this::handleTokenNames);
+            HttpContext publicKeyContext = https.createContext("/api/public-key", this::handlePublicKey);
+
+            // 4) attach the CORS filter to each
+            statusContext.getFilters().add(new CorsFilter());
+            tokensContext.getFilters().add(new CorsFilter());
+            publicKeyContext.getFilters().add(new CorsFilter());
+
             https.setExecutor(null);
             https.start();
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void handleStatus(HttpExchange ex) throws IOException {
+        if (!"GET".equalsIgnoreCase(ex.getRequestMethod())) {
+            ex.sendResponseHeaders(405, -1);
+            ex.close();
+            return;
+        }
+
+        String json = "{\"status\": \"active\"}";
+        byte[] data = json.getBytes(StandardCharsets.UTF_8);
+        ex.getResponseHeaders().add("Content-Type", "application/json");
+        ex.sendResponseHeaders(200, data.length);
+        ex.getResponseBody().write(data);
+        ex.close();
+    }
+
+    private void handleTokenNames(HttpExchange ex) throws IOException {
+        if (!"GET".equalsIgnoreCase(ex.getRequestMethod())) {
+            ex.sendResponseHeaders(405, -1);
+            ex.close();
+            return;
+        }
+
+        String json = this.tokenManager.getTokens().stream()
+                .map(t -> "\"" + t.getName().replace("\"", "\\\"") + "\"")
+                .collect(Collectors.joining(",", "[", "]"));
+        byte[] data = json.getBytes(StandardCharsets.UTF_8);
+        ex.getResponseHeaders().add("Content-Type", "application/json");
+        ex.sendResponseHeaders(200, data.length);
+        ex.getResponseBody().write(data);
+        ex.close();
     }
 
     private void handlePublicKey(HttpExchange ex) throws IOException {
