@@ -6,6 +6,7 @@ import com.masofino.birp.tokenmanager.entities.Token;
 import com.masofino.birp.tokenmanager.ui.AddTokenDialog;
 import com.masofino.birp.tokenmanager.ui.EntropyStage;
 import com.masofino.birp.tokenmanager.ui.ImportFilesDialog;
+import com.masofino.birp.tokenmanager.ui.PinDialog;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Window;
@@ -17,6 +18,7 @@ import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
+import java.util.Optional;
 
 public class MainController {
 
@@ -24,7 +26,7 @@ public class MainController {
     private ListView<String> tokenList;
 
     private TokenManager tokenManager;
-    private AppConfig appConfig;
+    private AppConfig appConfig = AppConfig.getInstance();
 
     public void setTokenManager(TokenManager tokenManager) {
         this.tokenManager = tokenManager;
@@ -52,29 +54,26 @@ public class MainController {
         if (tokenManager == null) return;
 
         AddTokenDialog addDialog = new AddTokenDialog();
-        addDialog.getDialogPane().getStylesheets().add(getClass().getResource("/com/masofino/birp/tokenmanager/style.css").toExternalForm());
-        java.util.Optional<AddTokenDialog.Result> addRes = addDialog.showAndGet();
+        addDialog.getDialogPane().getStylesheets().add(appConfig.getProperty("url.stylesheet"));
+        Optional<AddTokenDialog.Result> addRes = addDialog.showAndGet();
         if (addRes.isEmpty()) return;
+
         String name = addRes.get().name();
         String mode = addRes.get().mode();
-        TextInputDialog pinDialog = new TextInputDialog();
-        pinDialog.setTitle("Enter PIN");
-        pinDialog.setContentText("4-digit PIN:");
-        pinDialog.getDialogPane().getStylesheets().add(getClass().getResource("/com/masofino/birp/tokenmanager/style.css").toExternalForm());
-        java.util.Optional<String> pinOpt = pinDialog.showAndWait();
-        if (pinOpt.isEmpty() || !pinOpt.get().matches("\\d{4}")) {
-            Alert a = new Alert(Alert.AlertType.WARNING, "Invalid PIN");
-            a.show();
-            return;
-        }
+
+        PinDialog pinDialog = new PinDialog();
+        pinDialog.getDialogPane().getStylesheets().add(appConfig.getProperty("url.stylesheet"));
+        Optional<String> pinOpt = pinDialog.showAndGet();
+        if (pinOpt.isEmpty()) return;
         String pin = pinOpt.get();
 
         try {
-            if ("Import".equals(mode)) {
+            if (mode.equals("Import")) {
                 ImportFilesDialog fileDialog = new ImportFilesDialog();
-                fileDialog.getDialogPane().getStylesheets().add(getClass().getResource("/com/masofino/birp/tokenmanager/style.css").toExternalForm());
-                java.util.Optional<ImportFilesDialog.Result> fRes = fileDialog.showAndGet();
+                fileDialog.getDialogPane().getStylesheets().add(appConfig.getProperty("url.stylesheet"));
+                Optional<ImportFilesDialog.Result> fRes = fileDialog.showAndGet();
                 if (fRes.isEmpty()) return;
+
                 tokenManager.importToken(name, fRes.get().certificate(), fRes.get().privateKey(), pin);
             } else {
                 EntropyStage es = new EntropyStage();
@@ -82,7 +81,9 @@ public class MainController {
                 tokenManager.generateToken(name, rand, pin);
             }
 
-            new Alert(Alert.AlertType.INFORMATION, "Token '" + name + "' created successfully").show();
+            Alert success = new Alert(Alert.AlertType.INFORMATION, "Token '" + name + "' created successfully");
+            success.getDialogPane().getStylesheets().add(appConfig.getProperty("url.stylesheet"));
+            success.show();
             tokenList.getItems().setAll(tokenManager.getTokens().stream().map(Token::getName).toList());
         } catch (IOException | GeneralSecurityException | OperatorCreationException e) {
             Alert a = new Alert(Alert.AlertType.ERROR, e.getMessage());
