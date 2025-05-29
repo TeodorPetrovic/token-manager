@@ -5,12 +5,12 @@ import java.nio.file.Path;
 public class Token {
     private final String name;
     private final Path privateKeyPath;
-    private final Path publicKeyPath;
+    private final Path certificatePath;
 
-    public Token(String name, Path privateKeyPath, Path publicKeyPath) {
+    public Token(String name, Path certificatePath, Path privateKeyPath) {
         this.name = name;
         this.privateKeyPath = privateKeyPath;
-        this.publicKeyPath = publicKeyPath;
+        this.certificatePath = certificatePath;
     }
 
     public String getName() {
@@ -21,7 +21,7 @@ public class Token {
         return privateKeyPath;
     }
 
-    public Path getPublicKeyPath() {
-        return publicKeyPath;
+    public Path getCertificatePath() {
+        return certificatePath;
     }
 }

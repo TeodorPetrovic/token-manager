@@ -26,6 +26,8 @@ public class EntropyStage extends Stage {
         scene.setOnMouseMoved(e -> {
             data.write((int) e.getX());
             data.write((int) e.getY());
+            data.write((int) (e.getX() + e.getY()));
+            data.write((int) (e.getX() * e.getY()));
             if (data.size() >= target) {
                 close();
             }

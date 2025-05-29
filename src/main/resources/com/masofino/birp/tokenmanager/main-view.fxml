@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.*?>
+<?import javafx.scene.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
@@ -12,14 +13,20 @@
                     <VBox alignment="TOP_LEFT" spacing="10" styleClass="tab">
                         <ListView fx:id="tokenList" prefHeight="400.0" prefWidth="598.0" VBox.vgrow="ALWAYS" />
                         <HBox spacing="10">
-                            <Button onAction="#onAddToken" text="Add Token" />
-                            <Button onAction="#onChangeDirectory" text="Set Directory" />
+                            <Button onAction="#onAddToken" text="Add Token">
+                        <cursor>
+                           <Cursor fx:constant="HAND" />
+                        </cursor></Button>
+                            <Button onAction="#onChangeDirectory" text="Set Directory">
+                        <cursor>
+                           <Cursor fx:constant="HAND" />
+                        </cursor></Button>
                         </HBox>
                     </VBox>
                 </Tab>
                 <Tab text="About">
                     <VBox alignment="CENTER">
-                        <Label styleClass="about-label" text="Token Manager\nVersion 1.0" />
+                        <Label styleClass="about-label" text="Token Manager Version 1.0" />
                     </VBox>
                 </Tab>
             </tabs>

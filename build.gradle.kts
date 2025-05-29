@@ -27,7 +27,7 @@ tasks.withType<JavaCompile> {
 
 application {
     mainModule.set("com.masofino.birp.tokenmanager")
-    mainClass.set("com.masofino.birp.tokenmanager.HelloApplication")
+    mainClass.set("com.masofino.birp.tokenmanager.MainApp")
 }
 
 javafx {

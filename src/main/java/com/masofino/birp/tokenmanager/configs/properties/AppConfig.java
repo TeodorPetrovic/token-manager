@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Properties;
 
 public class AppConfig {
@@ -14,7 +16,7 @@ public class AppConfig {
     // Default config values
     private static final String DEFAULT_CERT_PATH = "certs/certificate.pem";
     private static final String DEFAULT_PRIVATE_KEY_PATH = "certs/private.pem";
-    private static final String DEFAULT_WORKSPACE_PATH = "workspace";
+    private static final String DEFAULT_STORAGE_PATH = "storage";
 
     private AppConfig() {
         properties = new Properties();
@@ -34,9 +36,16 @@ public class AppConfig {
     }
 
     private void setDefaults() {
-        properties.setProperty("workspace.path", DEFAULT_WORKSPACE_PATH);
-        properties.setProperty("certificate.path", DEFAULT_CERT_PATH);
-        properties.setProperty("private.path", DEFAULT_PRIVATE_KEY_PATH);
+        properties.setProperty("path.storage", DEFAULT_STORAGE_PATH);
+        properties.setProperty("path.certificate", DEFAULT_CERT_PATH);
+        properties.setProperty("path.private-key", DEFAULT_PRIVATE_KEY_PATH);
+
+        try {
+            Files.createDirectories(Path.of(DEFAULT_CERT_PATH).getParent());
+            Files.createDirectories(Path.of(DEFAULT_STORAGE_PATH));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static synchronized AppConfig getInstance() {
@@ -46,12 +55,12 @@ public class AppConfig {
         return instance;
     }
 
-    public String getWorkspacePath() {
-        return properties.getProperty("workspace.path", DEFAULT_WORKSPACE_PATH);
+    public Path getTokensStoragePath() {
+        return Path.of(properties.getProperty("path.storage", DEFAULT_STORAGE_PATH));
     }
 
-    public void setWorkspacePath(String path) {
-        properties.setProperty("workspace.path", path);
+    public void setTokensStoragePath(String path) {
+        properties.setProperty("path.storage", path);
     }
 
     public void setProperty(String key, String value) {

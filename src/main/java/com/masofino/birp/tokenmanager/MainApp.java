@@ -13,6 +13,7 @@ import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.MenuItem;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
@@ -27,16 +28,14 @@ import javax.net.ssl.SSLContext;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.Security;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
-import java.util.Objects;
 
-public class HelloApplication extends Application {
+public class MainApp extends Application {
 
     private Stage primaryStage;
     private FXTrayIcon trayIcon;
@@ -46,19 +45,21 @@ public class HelloApplication extends Application {
     @Override
     public void start(Stage stage) throws IOException {
         this.primaryStage = stage;
+        appConfig.setProperty("url.stylesheet", String.valueOf(MainApp.class.getResource("style.css")));
+        appConfig.setProperty("url.image", String.valueOf(MainApp.class.getResource("tray.png")));
 
-        FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("main-view.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(MainApp.class.getResource("main-view.fxml"));
         Scene scene = new Scene(fxmlLoader.load());
-        scene.getStylesheets().add(Objects.requireNonNull(HelloApplication.class.getResource("style.css")).toExternalForm());
+        scene.getStylesheets().add(appConfig.getProperty("url.stylesheet"));
 
         primaryStage.setTitle("Hello!");
         primaryStage.setScene(scene);
         primaryStage.setOnCloseRequest(this::hideToTray);
+        primaryStage.getIcons().add(new Image(appConfig.getProperty("url.image")));
         primaryStage.show();
 
         MainController controller = fxmlLoader.getController();
-        Path keyDir = Path.of(appConfig.getWorkspacePath());
-        TokenManager manager = new TokenManager(keyDir);
+        TokenManager manager = new TokenManager();
         controller.setTokenManager(manager);
         this.tokenManager = manager;
 
@@ -76,7 +77,7 @@ public class HelloApplication extends Application {
     }
 
     private void setupSystemTray() {
-        trayIcon = new FXTrayIcon(primaryStage, Objects.requireNonNull(HelloApplication.class.getResource("/com/masofino/birp/tokenmanager/tray.png")));
+        trayIcon = new FXTrayIcon(primaryStage, new Image(appConfig.getProperty("url.image")));
         trayIcon.setApplicationTitle("Token Manager");
 
         // Create menu items
@@ -87,11 +88,6 @@ public class HelloApplication extends Application {
             primaryStage.toFront();
         }));
 
-        MenuItem inspectCertItem = new MenuItem("Inspect Certificate");
-        inspectCertItem.setOnAction(e -> Platform.runLater(() -> {
-            System.out.println("Inspect cert clicked");
-        }));
-
         MenuItem exitItem = new MenuItem("Exit");
         exitItem.setOnAction(e -> {
             Platform.exit();
@@ -100,7 +96,6 @@ public class HelloApplication extends Application {
 
         // Add menu items to the tray icon
         trayIcon.addMenuItem(openItem);
-        trayIcon.addMenuItem(inspectCertItem);
         trayIcon.addSeparator();
         trayIcon.addMenuItem(exitItem);
 
@@ -147,9 +142,14 @@ public class HelloApplication extends Application {
         if (token == null) {
             ex.sendResponseHeaders(404, -1);
         } else {
-            byte[] data = Files.readAllBytes(token.getPublicKeyPath());
-            ex.sendResponseHeaders(200, data.length);
-            ex.getResponseBody().write(data);
+            try (PEMParser parser = new PEMParser(new java.io.FileReader(token.getCertificatePath().toFile()))) {
+                X509CertificateHolder holder = (X509CertificateHolder) parser.readObject();
+                byte[] pub = holder.getSubjectPublicKeyInfo().getEncoded();
+                String pem = "-----BEGIN PUBLIC KEY-----\n" + java.util.Base64.getEncoder().encodeToString(pub) + "\n-----END PUBLIC KEY-----";
+                byte[] data = pem.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                ex.sendResponseHeaders(200, data.length);
+                ex.getResponseBody().write(data);
+            }
         }
         ex.close();
     }
