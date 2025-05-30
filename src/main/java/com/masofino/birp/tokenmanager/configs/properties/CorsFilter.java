@@ -2,7 +2,6 @@ package com.masofino.birp.tokenmanager.configs.properties;
 
 import com.sun.net.httpserver.Filter;
 import com.sun.net.httpserver.HttpExchange;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +14,7 @@ public class CorsFilter extends Filter {
         headers.put("Access-Control-Allow-Origin", List.of("*"));
         headers.put("Access-Control-Allow-Methods", List.of("GET","POST","OPTIONS"));
         headers.put("Access-Control-Allow-Headers", List.of("Content-Type","Authorization"));
+        headers.put("Access-Control-Expose-Headers", List.of("Content-Disposition","X-Envelope-Key","X-Envelope-IV"));
 
         // if this is a preflight, reply 204 No Content immediately
         if ("OPTIONS".equalsIgnoreCase(exchange.getRequestMethod())) {

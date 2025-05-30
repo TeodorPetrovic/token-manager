@@ -36,6 +36,10 @@ javafx {
 }
 
 dependencies {
+    val platform = javafx.platform.classifier
+    implementation("org.openjfx:javafx-controls:${javafx.version}:$platform")
+    implementation("org.openjfx:javafx-fxml:${javafx.version}:$platform")
+    implementation("org.openjfx:javafx-swing:${javafx.version}:$platform")
     implementation("org.controlsfx:controlsfx:11.2.1")
     implementation("com.dlsc.formsfx:formsfx-core:11.6.0") {
         exclude(group = "org.openjfx")
@@ -61,5 +65,11 @@ jlink {
     options.set(listOf("--strip-debug", "--compress", "2", "--no-header-files", "--no-man-pages"))
     launcher {
         name = "app"
+    }
+}
+
+tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
+    manifest {
+        attributes(mapOf("Main-Class" to application.mainClass.get()))
     }
 }
