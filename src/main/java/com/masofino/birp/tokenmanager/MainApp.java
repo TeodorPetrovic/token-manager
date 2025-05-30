@@ -132,11 +132,13 @@ public class MainApp extends Application {
             HttpContext statusContext    = https.createContext("/api/status",    this::handleStatus);
             HttpContext tokensContext    = https.createContext("/api/tokens",    this::handleTokenNames);
             HttpContext publicKeyContext = https.createContext("/api/public-key", this::handlePublicKey);
+            HttpContext decryptCtx = https.createContext("/api/decrypt/file", this::handleDecrypt);
 
             // 4) attach the CORS filter to each
             statusContext.getFilters().add(new CorsFilter());
             tokensContext.getFilters().add(new CorsFilter());
             publicKeyContext.getFilters().add(new CorsFilter());
+            decryptCtx.getFilters().add(new CorsFilter());
 
             https.setExecutor(null);
             https.start();
