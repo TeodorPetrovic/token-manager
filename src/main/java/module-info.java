@@ -14,6 +14,7 @@ module com.masofino.birp.tokenmanager {
     requires java.prefs;
     requires org.bouncycastle.provider;
     requires org.bouncycastle.pkix;
+    requires java.net.http;
 
     opens com.masofino.birp.tokenmanager to javafx.fxml;
     exports com.masofino.birp.tokenmanager;

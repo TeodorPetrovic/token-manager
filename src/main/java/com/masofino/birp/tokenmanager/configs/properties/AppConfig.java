@@ -17,6 +17,8 @@ public class AppConfig {
     private static final String DEFAULT_CERT_PATH = "certs/certificate.pem";
     private static final String DEFAULT_PRIVATE_KEY_PATH = "certs/private.pem";
     private static final String DEFAULT_STORAGE_PATH = "storage";
+    private static final String DEFAULT_BACKEND_URL = "http://localhost:8080";
+    private static final int DEFAULT_GCM_TAG_SIZE = 128;
 
     private AppConfig() {
         properties = new Properties();
@@ -39,6 +41,8 @@ public class AppConfig {
         properties.setProperty("path.storage", DEFAULT_STORAGE_PATH);
         properties.setProperty("path.certificate", DEFAULT_CERT_PATH);
         properties.setProperty("path.private-key", DEFAULT_PRIVATE_KEY_PATH);
+        properties.setProperty("backend.url", DEFAULT_BACKEND_URL);
+        properties.setProperty("encryption.gcm-tag-size", String.valueOf(DEFAULT_GCM_TAG_SIZE));
 
         try {
             Files.createDirectories(Path.of(DEFAULT_CERT_PATH).getParent());
