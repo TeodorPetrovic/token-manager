@@ -4,7 +4,7 @@ plugins {
     id("org.javamodularity.moduleplugin") version "1.8.12"
     id("org.openjfx.javafxplugin") version "0.0.13"
     id("org.beryx.jlink") version "2.25.0"
-}
+    id("com.gradleup.shadow") version "8.3.6"}
 
 group = "com.masofino.birp"
 version = "1.0-SNAPSHOT"

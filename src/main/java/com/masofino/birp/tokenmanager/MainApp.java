@@ -6,6 +6,7 @@ import com.masofino.birp.tokenmanager.configs.properties.AppConfig;
 import com.masofino.birp.tokenmanager.configs.properties.CorsFilter;
 import com.masofino.birp.tokenmanager.controllers.MainController;
 import com.masofino.birp.tokenmanager.entities.Token;
+import com.masofino.birp.tokenmanager.ui.PinDialog;
 import com.sun.net.httpserver.*;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -50,6 +51,7 @@ import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 public class MainApp extends Application {
@@ -123,8 +125,8 @@ public class MainApp extends Application {
     private void startHttpsServer() {
         try {
             HttpsServer https = HttpsServer.create(new InetSocketAddress(8443), 0);
-            Path certPath = Path.of(appConfig.getProperty("certificate.path"));
-            Path privPath = Path.of(appConfig.getProperty("private.path"));
+            Path certPath = Path.of(appConfig.getProperty("path.certificate"));
+            Path privPath = Path.of(appConfig.getProperty("path.private-key"));
             SSLContext sslContext = createSSLContext(certPath, privPath);
             https.setHttpsConfigurator(new HttpsConfigurator(sslContext));
 
@@ -140,7 +142,7 @@ public class MainApp extends Application {
             publicKeyContext.getFilters().add(new CorsFilter());
             decryptCtx.getFilters().add(new CorsFilter());
 
-            https.setExecutor(null);
+            https.setExecutor(Executors.newFixedThreadPool(2));
             https.start();
         } catch (Exception e) {
             e.printStackTrace();
@@ -158,19 +160,23 @@ public class MainApp extends Application {
         int fileId = Integer.parseInt(parts[parts.length - 1]);
 
         String query = ex.getRequestURI().getQuery();    // "token=MyCert"
-        String tokenName = null;
+        String tokenName;
         if (query != null && query.startsWith("token=")) {
             tokenName = URLDecoder.decode(query.substring(6), StandardCharsets.UTF_8);
+        } else {
+            tokenName = null;
         }
         if (tokenName == null) {
             ex.sendResponseHeaders(400, -1); ex.close(); return;
         }
 
         // 2) prompt user for PIN
-        char[] pin = PinDialog.showAndWait();  // your existing dialog
-        if (pin == null || pin.length == 0) {
+        String pinStr = PinDialog.requestPin();  // your existing dialog
+        if (pinStr == null || pinStr.isEmpty()) {
             ex.sendResponseHeaders(401, -1); ex.close(); return;
         }
+
+        char[] pin = pinStr.toCharArray();
 
         try {
             // 3) decrypt the on-prem private key

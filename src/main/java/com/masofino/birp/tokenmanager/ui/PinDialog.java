@@ -8,7 +8,8 @@ import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
-
+import javafx.application.Platform;
+import java.util.concurrent.CompletableFuture;
 import java.util.Optional;
 
 public class PinDialog extends Dialog<String> {
@@ -44,5 +45,22 @@ public class PinDialog extends Dialog<String> {
     public Optional<String> showAndGet() {
         setResultConverter(btn -> btn == ButtonType.OK ? pinField.getText() : null);
         return showAndWait();
+    }
+
+    public static String requestPin() {
+        if (Platform.isFxApplicationThread()) {
+            return new PinDialog().showAndGet().orElse(null);
+        }
+
+        CompletableFuture<String> future = new CompletableFuture<>();
+        Platform.runLater(() -> {
+            future.complete(new PinDialog().showAndGet().orElse(null));
+        });
+
+        try {
+            return future.get();
+        } catch (Exception e) {
+            return null;
+        }
     }
 }
